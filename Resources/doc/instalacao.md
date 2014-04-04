@@ -3,7 +3,7 @@
 Assumimos que você já tenha o binário do composer instalado ou o arquivo composer.phar, sendo assim, execute o seguinte comando:
 
 ```bash
-$ composer require cekurte/fixturesbundle
+$ composer require cekurte/livebuzzbundle
 ```
 
 Agora adicione o Bundle no seu Kernel:
@@ -14,13 +14,11 @@ Agora adicione o Bundle no seu Kernel:
 
 public function registerBundles()
 {
-    if (in_array($this->getEnvironment(), array('dev', 'test'))) {
+    $bundles = array(
         // ...
-        $bundles[] = new Doctrine\Bundle\FixturesBundle\DoctrineFixturesBundle();
-        $bundles[] = new Hautelook\AliceBundle\HautelookAliceBundle();
-        $bundles[] = new Cekurte\FixturesBundle\CekurteFixturesBundle();
+        new Cekurte\LivebuzzBundle\CekurteLivebuzzBundle(),
         // ...
-    }
+    );
 }
 ```
 
