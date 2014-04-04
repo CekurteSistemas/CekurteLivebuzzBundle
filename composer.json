@@ -1,0 +1,22 @@
+{
+    "name": "cekurte/livebuzzbundle",
+    "description": "Bundle of Livebuzz for Symfony2",
+    "keywords": ["livebuzz", "symfony2", "cekurte"],
+    "type": "symfony-bundle",
+    "authors": [
+        {
+            "name": "João Paulo Cercal",
+            "email": "sistemas@cekurte.com",
+            "homepage": "http://sistemas.cekurte.com/"
+        }
+    ],
+    "autoload": {
+        "psr-0": { "Cekurte\\LivebuzzBundle": "" }
+    },
+    "target-dir": "Cekurte/LivebuzzBundle",
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    }
+}
