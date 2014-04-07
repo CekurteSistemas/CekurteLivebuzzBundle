@@ -117,7 +117,7 @@ class LivebuzzService extends ContainerAware
         $serviceHandler = curl_init();
 
         if ($method == 'GET' && $data)
-            $uri .= "/" . urlencode($data);
+            $uri .= "/" . urlencode(json_encode($data));
 
         curl_setopt($serviceHandler, CURLOPT_URL, self::SERVICE_URL . '/' . $uri);
         curl_setopt($serviceHandler, CURLOPT_HEADER, false);
