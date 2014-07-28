@@ -29,6 +29,16 @@ class LivebuzzService extends ContainerAware
     /**
      * @var string
      */
+    protected $username;
+
+    /**
+     * @var string
+     */
+    protected $password;
+
+    /**
+     * @var string
+     */
     protected $authToken;
 
     /**
@@ -40,54 +50,74 @@ class LivebuzzService extends ContainerAware
     {
         $this->setContainer($container);
 
-        $serviceHandler = curl_init();
-
-        // Prepara as opções para o processo de autenticação
-        curl_setopt($serviceHandler, CURLOPT_URL, self::SERVICE_AUTH_URL);
-        curl_setopt($serviceHandler, CURLOPT_HEADER, FALSE);
-        curl_setopt($serviceHandler, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($serviceHandler, CURLOPT_POST, TRUE);
-
         $parameter = $this->getContainer()->getParameter('cekurte_livebuzz');
 
-        // Dados de autenticação. Senhas devem ser passadas sempre como um hash MD5
-        $data = array(
-            'email' => $parameter['livebuzz']['email'],
-            'senha' => md5($parameter['livebuzz']['password'])
+        $this->setCredentials(
+            $parameter['livebuzz']['email'],
+            $parameter['livebuzz']['password']
         );
-
-        curl_setopt($serviceHandler, CURLOPT_POSTFIELDS, http_build_query($data));
-
-        // Captura a resposta da ação de autenticação
-        $response = curl_exec($serviceHandler);
-
-        // E o código do status HTTP da resposta
-        $code = curl_getinfo($serviceHandler, CURLINFO_HTTP_CODE);
-
-        // Se a requisição HTTP não foi bem sucedida (código 200)
-        if ($code != 200) {
-            throw new \Exception('Ocorreu um erro ao realizar a autenticação com o serviço "Livebuzz". Verifique se as suas credenciais estão corretas!');
-        }
-
-        // Aplica a função da linguagem que converte uma string JSON para um objeto
-        $response = json_decode($response);
-
-        // Armazena o Token e a URL que serão usados nas requisições subsequentes
-        $this->setAuthToken($response->token);
     }
 
     /**
-     * Get AuthToken
+     * Set a password
+     *
+     * @param string $password
+     *
+     * @return LivebuzzService
+     */
+    protected function setPassword($password)
+    {
+        $this->password = md5($password);
+
+        return $this;
+    }
+
+    /**
+     * Get a encoded md5 password
      *
      * @return string
      */
-    public function getAuthToken()
+    protected function getEncodedPassword()
+    {
+        return $this->password;
+    }
+
+    /**
+     * Set a username
+     *
+     * @param string $username
+     *
+     * @return LivebuzzService
+     */
+    protected function setUsername($username)
+    {
+        $this->username = $username;
+
+        return $this;
+    }
+
+    /**
+     * Get a username
+     *
+     * @return string
+     */
+    protected function getUsername()
+    {
+        return $this->username;
+    }
+
+    /**
+     * Get a auth token
+     *
+     * @return string
+     */
+    protected function getAuthToken()
     {
         return $this->authToken;
     }
 
     /**
-     * Set AuthToken
+     * Set a auth token
      *
      * @param string $authToken
      *
@@ -96,6 +126,61 @@ class LivebuzzService extends ContainerAware
     protected function setAuthToken($authToken)
     {
         $this->authToken = $authToken;
+
+        return $this;
+    }
+
+    /**
+     * Set credentials
+     *
+     * @param string $username
+     * @param string $password
+     *
+     * @return LivebuzzService
+     */
+    public function setCredentials($username, $password)
+    {
+        $this
+            ->setUsername($username)
+            ->setPassword($password)
+        ;
+
+        $serviceHandler = curl_init();
+
+        curl_setopt($serviceHandler, CURLOPT_URL, self::SERVICE_AUTH_URL);
+        curl_setopt($serviceHandler, CURLOPT_HEADER, FALSE);
+        curl_setopt($serviceHandler, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($serviceHandler, CURLOPT_POST, TRUE);
+
+        curl_setopt($serviceHandler, CURLOPT_POSTFIELDS, http_build_query(array(
+            'email' => $this->getUsername(),
+            'senha' => $this->getEncodedPassword(),
+        )));
+
+        $response = curl_exec($serviceHandler);
+
+        $code = curl_getinfo($serviceHandler, CURLINFO_HTTP_CODE);
+
+        if ($code != 200) {
+            throw new \Exception(sprintf('%s. %s!',
+                'Ocorreu um erro ao realizar a autenticação com o serviço "Livebuzz"',
+                'Verifique se as suas credenciais estão corretas'
+            ));
+        }
+
+        $response = json_decode($response);
+
+        try {
+
+            $this->setAuthToken($response->token);
+
+        } catch (\Exception $e) {
+
+            throw new \InvalidArgumentException(
+                sprintf('CekurteLivebuzzBundle: %s', $response->message),
+                $response->code
+            );
+        }
 
         return $this;
     }
